@@ -1,0 +1,13 @@
+[project]
+name = "inter-dataset-generalisation-cybersickness"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "ipykernel>=7.1.0",
+    "numpy>=2.4.2",
+    "pandas>=3.0.0",
+    "scipy>=1.17.0",
+    "spicy>=0.16.0",
+]
