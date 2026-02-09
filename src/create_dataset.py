@@ -16,4 +16,15 @@ print("Nombre de fichiers trouves:", len(files))
 for filename in files:
     if filename.endswith(".csv"):
         filepath = os.path.join(input_dir, filename)
-        print("Traitement de", filename)
+        
+        try:
+            df = pd.read_csv(filepath)
+            
+            # Verifier si les colonnes existent
+            if 'EDA_z' in df.columns and 'HR_z' in df.columns:
+                print("Fichier OK:", filename)
+            else:
+                print("Colonnes manquantes dans", filename)
+                
+        except:
+            print("Erreur avec", filename)
