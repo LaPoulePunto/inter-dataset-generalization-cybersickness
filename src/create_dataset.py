@@ -12,3 +12,8 @@ data = []
 
 files = os.listdir(input_dir)
 print("Nombre de fichiers trouves:", len(files))
+
+for filename in files:
+    if filename.endswith(".csv"):
+        filepath = os.path.join(input_dir, filename)
+        print("Traitement de", filename)
