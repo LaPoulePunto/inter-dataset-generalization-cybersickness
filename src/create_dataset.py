@@ -2,6 +2,7 @@
 import os
 import pandas as pd
 import numpy as np
+from scipy import stats
 
 # Repertoires
 input_dir = "processed_data/normalized_sessions"
@@ -45,10 +46,18 @@ for filename in files:
                 std_eda = df['EDA_z'].std()
                 max_eda = df['EDA_z'].max()
                 
+                slope, _, _, _, _ = stats.linregress(df['Time'], df['EDA_z'])
+                if np.isnan(slope):
+                    slope = 0
+                
                 # HR
                 mean_hr = df['HR_z'].mean()
                 std_hr = df['HR_z'].std()
                 max_hr = df['HR_z'].max()
+                
+                slope_hr, _, _, _, _ = stats.linregress(df['Time'], df['HR_z'])
+                if np.isnan(slope_hr):
+                    slope_hr = 0
                 
                 # Stocker dans un dictionnaire
                 row = {
@@ -58,9 +67,11 @@ for filename in files:
                     'mean_EDA_z': mean_eda,
                     'std_EDA_z': std_eda,
                     'max_EDA_z': max_eda,
+                    'slope_EDA_z': slope,
                     'mean_HR_z': mean_hr,
                     'std_HR_z': std_hr,
-                    'max_HR_z': max_hr
+                    'max_HR_z': max_hr,
+                    'slope_HR_z': slope_hr
                 }
                 
                 data.append(row)
@@ -73,4 +84,10 @@ for filename in files:
 
 # Creer le DataFrame final
 df_final = pd.DataFrame(data)
-print("Taille finale:", df_final.shape)
+
+# Sauvegarder
+if not os.path.exists("processed_data"):
+    os.makedirs("processed_data")
+
+df_final.to_csv(output_file, index=False)
+print("Fini ! Sauvegarde dans", output_file)
