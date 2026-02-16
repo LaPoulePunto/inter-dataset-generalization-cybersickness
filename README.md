@@ -33,3 +33,13 @@ To run the data extraction and processing logic (which uses `src/processing.py`)
 ```bash
 uv run run_extraction.py
 ```
+
+### 3. Aggregate Session Data (LODO Preparation)
+
+To convert time-series session data into a single feature vector per session (mean, std, max, slope) for Leave-One-Dataset-Out (LODO) generalization:
+
+```bash
+uv run src/aggregate_sessions.py
+```
+
+This generates `processed_data/aggregated_dataset.csv`.
