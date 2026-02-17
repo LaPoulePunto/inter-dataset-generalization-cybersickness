@@ -24,7 +24,8 @@ def load_wang_data(file_path, output_dir):
             # Direct access to data
             eda_df = sample.Empatica.GSR.copy()
             hr_df = sample.Empatica.HR.copy()
-            ssq_score = sample.SicknessLevel.SSQ
+            # Normalize SSQ (0-235.62 -> 0-1)
+            ssq_score = sample.SicknessLevel.SSQ / 235.62
             
             # Simple renaming: GSR -> EDA
             if 'GSR' in eda_df.columns:
@@ -34,8 +35,7 @@ def load_wang_data(file_path, output_dir):
             process_and_save_session(
                 session_id=key,
                 dataset_id='Wang2020',
-                raw_eda=eda_df,
-                raw_hr=hr_df,
+                signals={'EDA': eda_df, 'HR': hr_df},
                 label_ssq=ssq_score,
                 output_dir=output_dir
             )

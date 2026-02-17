@@ -38,6 +38,8 @@ def load_wheelsim_data(root_path, output_dir):
                  row = ssq_df[ssq_df['Type'] == 'ssq_pos']
                  if not row.empty:
                      ssq_score = float(row.iloc[0]['Var2'])
+                     # Normalize SSQ (0-235.62 -> 0-1)
+                     ssq_score = ssq_score / 235.62
             
             if ssq_score is None:
                 continue
@@ -67,8 +69,7 @@ def load_wheelsim_data(root_path, output_dir):
             process_and_save_session(
                 session_id=session_id,
                 dataset_id='WheelSim2023',
-                raw_eda=eda_df,
-                raw_hr=hr_df,
+                signals={'EDA': eda_df, 'HR': hr_df},
                 label_ssq=ssq_score,
                 output_dir=output_dir
             )
