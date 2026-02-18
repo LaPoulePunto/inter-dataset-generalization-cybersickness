@@ -3,91 +3,74 @@ import os
 import pandas as pd
 import numpy as np
 from scipy import stats
+from src.data_loading.wang_loader import load_wang_data
+from src.data_loading.wheelsim_loader import load_wheelsim_data
+from src.data_loading.vr_cybersickness_loader import load_vr_cybersickness_data
 
-# Repertoires
-input_dir = "processed_data/normalized_sessions"
-output_file = "processed_data/aggregated_dataset.csv"
-
-# Liste pour stocker les donnees
-data = []
-
-files = os.listdir(input_dir)
-print("Nombre de fichiers trouves:", len(files))
-
-for filename in files:
-    if filename.endswith(".csv"):
-        filepath = os.path.join(input_dir, filename)
+def main():
+    raw_data_dir = os.path.join(os.getcwd(), 'raw_data')
+    output_dir = os.path.join(os.getcwd(), 'processed_data', 'normalized_sessions')
+    output_file = os.path.join(os.getcwd(), 'processed_data', 'aggregated_dataset.csv')
+    
+    # 1. Load Datasets
+    wang_path = os.path.join(raw_data_dir, 'wang', 'raw_data2020.p')
+    if os.path.exists(wang_path): load_wang_data(wang_path, output_dir)
         
+    wheelsim_path = os.path.join(raw_data_dir, 'wheelSimPhysio2023')
+    if os.path.exists(wheelsim_path): load_wheelsim_data(wheelsim_path, output_dir)
+
+    vr_path = os.path.join(raw_data_dir, 'VR_Cybersickness_Dataset') 
+    if os.path.exists(vr_path): load_vr_cybersickness_data(vr_path, output_dir)
+
+    # 2. Aggregate Features
+    if not os.path.exists(output_dir):
+        print(f"Input directory {output_dir} does not exist.")
+        return
+
+    data = []
+    files = [f for f in os.listdir(output_dir) if f.endswith(".csv")]
+    print(f"Nombre de fichiers trouves: {len(files)}")
+
+    for filename in files:
+        filepath = os.path.join(output_dir, filename)
         try:
             df = pd.read_csv(filepath)
             
-            # Verifier si les colonnes existent
-            if 'EDA_z' in df.columns and 'HR_z' in df.columns:
+            # Ensure required physiological/proxy columns exist
+            if 'EDA_z' not in df.columns or 'HR_z' not in df.columns:
+                continue
                 
-                # Info session
-                if 'session_id' in df.columns:
-                    session_id = df['session_id'].iloc[0]
-                else: 
-                    session_id = filename.replace("session_", "").replace(".csv", "")
+            session_id = df.get('session_id', pd.Series([filename.replace("session_", "").replace(".csv", "")])).iloc[0]
+            dataset_id = df.get('dataset_id', pd.Series(["Inconnu"])).iloc[0]
+            label = df.get('label_ssq', pd.Series([np.nan])).iloc[0]
+            
+            slope_eda, _, _, _, _ = stats.linregress(df['Time'], df['EDA_z'])
+            slope_hr, _, _, _, _ = stats.linregress(df['Time'], df['HR_z'])
+            
+            data.append({
+                'session_id': session_id,
+                'dataset_id': dataset_id,
+                'label_ssq': label,
+                'mean_EDA_z': df['EDA_z'].mean(),
+                'std_EDA_z': df['EDA_z'].std(),
+                'max_EDA_z': df['EDA_z'].max(),
+                'slope_EDA_z': 0 if np.isnan(slope_eda) else slope_eda,
+                'mean_HR_z': df['HR_z'].mean(),
+                'std_HR_z': df['HR_z'].std(),
+                'max_HR_z': df['HR_z'].max(),
+                'slope_HR_z': 0 if np.isnan(slope_hr) else slope_hr
+            })
                 
-                if 'dataset_id' in df.columns:
-                    dataset_id = df['dataset_id'].iloc[0]
-                else:
-                    dataset_id = "Inconnu"
-                    
-                if 'label_ssq' in df.columns:
-                    label = df['label_ssq'].iloc[0]
-                else:
-                    label = np.nan
-                
-                # Calcul des features
-                # EDA
-                mean_eda = df['EDA_z'].mean()
-                std_eda = df['EDA_z'].std()
-                max_eda = df['EDA_z'].max()
-                
-                slope, _, _, _, _ = stats.linregress(df['Time'], df['EDA_z'])
-                if np.isnan(slope):
-                    slope = 0
-                
-                # HR
-                mean_hr = df['HR_z'].mean()
-                std_hr = df['HR_z'].std()
-                max_hr = df['HR_z'].max()
-                
-                slope_hr, _, _, _, _ = stats.linregress(df['Time'], df['HR_z'])
-                if np.isnan(slope_hr):
-                    slope_hr = 0
-                
-                # Stocker dans un dictionnaire
-                row = {
-                    'session_id': session_id,
-                    'dataset_id': dataset_id,
-                    'label_ssq': label,
-                    'mean_EDA_z': mean_eda,
-                    'std_EDA_z': std_eda,
-                    'max_EDA_z': max_eda,
-                    'slope_EDA_z': slope,
-                    'mean_HR_z': mean_hr,
-                    'std_HR_z': std_hr,
-                    'max_HR_z': max_hr,
-                    'slope_HR_z': slope_hr
-                }
-                
-                data.append(row)
-                
-            else:
-                print("Colonnes manquantes dans", filename)
-                
-        except:
-            print("Erreur avec", filename)
+        except Exception as e:
+            print(f"Erreur avec {filename}: {e}")
 
-# Creer le DataFrame final
-df_final = pd.DataFrame(data)
+    # 3. Save Final Dataset
+    if data:
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        pd.DataFrame(data).to_csv(output_file, index=False)
+        print(f"Fini ! Sauvegarde dans {output_file}")
+    else:
+        print("Aucune donnee agregee (compatible EDA/HR).")
 
-# Sauvegarder
-if not os.path.exists("processed_data"):
-    os.makedirs("processed_data")
-
-df_final.to_csv(output_file, index=False)
-print("Fini ! Sauvegarde dans", output_file)
+if __name__ == "__main__":
+    main()
