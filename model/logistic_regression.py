@@ -14,8 +14,8 @@ def main():
         print(f"Error loading data: {e}")
         return
     
-    threshold = 0.25
-    df['bin_label'] = (df['label_ssq'] > threshold).astype(int)
+    threshold = 0.0848
+    df['bin_label'] = (df['label_ssq'] >= threshold).astype(int)
     y = df['bin_label']
     
     feature_cols = [col for col in df.columns if col not in ['session_id', 'dataset_id', 'label_ssq', 'bin_label']]
