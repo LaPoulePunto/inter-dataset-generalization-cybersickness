@@ -6,6 +6,7 @@ from scipy import stats
 from src.data_loading.wang_loader import load_wang_data
 from src.data_loading.wheelsim_loader import load_wheelsim_data
 from src.data_loading.vr_cybersickness_loader import load_vr_cybersickness_data
+from src.data_loading.archive_loader import load_archive_data
 
 def main():
     raw_data_dir = os.path.join(os.getcwd(), 'raw_data')
@@ -21,6 +22,9 @@ def main():
 
     vr_path = os.path.join(raw_data_dir, 'VR_Cybersickness_Dataset') 
     if os.path.exists(vr_path): load_vr_cybersickness_data(vr_path, output_dir)
+        
+    archive_path = os.path.join(raw_data_dir, 'archive')
+    if os.path.exists(archive_path): load_archive_data(archive_path, output_dir)
 
     # 2. Aggregate Features
     if not os.path.exists(output_dir):
