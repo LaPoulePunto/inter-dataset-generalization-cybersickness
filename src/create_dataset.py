@@ -1,5 +1,10 @@
-
 import os
+import sys
+
+# Add project root to Python path so 'src' imports work
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
+
 import pandas as pd
 import numpy as np
 from scipy import stats
@@ -9,9 +14,9 @@ from src.data_loading.vr_cybersickness_loader import load_vr_cybersickness_data
 from src.data_loading.archive_loader import load_archive_data
 
 def main():
-    raw_data_dir = os.path.join(os.getcwd(), 'raw_data')
-    output_dir = os.path.join(os.getcwd(), 'processed_data', 'normalized_sessions')
-    output_file = os.path.join(os.getcwd(), 'processed_data', 'aggregated_dataset.csv')
+    raw_data_dir = os.path.join(project_root, 'raw_data')
+    output_dir = os.path.join(project_root, 'processed_data', 'normalized_sessions')
+    output_file = os.path.join(project_root, 'processed_data', 'aggregated_dataset.csv')
     
     # 1. Load Datasets
     wang_path = os.path.join(raw_data_dir, 'wang', 'raw_data2020.p')
