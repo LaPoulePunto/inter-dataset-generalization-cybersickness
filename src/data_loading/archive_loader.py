@@ -63,9 +63,9 @@ def load_archive_data(root_path, output_dir):
                 # trial_data usually has multiple columns, like [ECG, GSR, ...]
                 if hasattr(trial_data, 'shape') and len(trial_data.shape) == 2 and trial_data.shape[1] >= 2:
                     
-                    # Assume Canal 0 = ECG, Canal 1 = GSR
-                    ecg_signal = trial_data[:, 0]
-                    eda_signal = trial_data[:, 1]
+                    # Canal 0 is likely EDA (slow-moving ~7.05), Canal 1 is ECG (fast-moving ~ -0.2)
+                    eda_signal = trial_data[:, 0]
+                    ecg_signal = trial_data[:, 1]
                     
                     # Create timestamp (Assuming sampling frequency = 1000Hz)
                     time_col = np.arange(len(eda_signal)) / 1000.0
