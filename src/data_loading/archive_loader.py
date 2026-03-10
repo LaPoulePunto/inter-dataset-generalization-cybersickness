@@ -50,8 +50,11 @@ def load_archive_data(root_path, output_dir):
         
         try:
             # Load pickled dat file
-            with open(dat_file, 'rb') as f:
-                data = pickle.load(f, encoding='latin1')
+            import warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                with open(dat_file, 'rb') as f:
+                    data = pickle.load(f, encoding='latin1')
                 
             if not isinstance(data, dict) or 'Data' not in data:
                 continue
