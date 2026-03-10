@@ -18,6 +18,11 @@ def align_signals(signals, target_fs=4.0):
         return pd.DataFrame({'Time': []})
         
     t_start, t_end = max(t_mins), min(t_maxs)
+    
+    # If the time ranges do not overlap or contain NaNs, return empty dataframe
+    if pd.isna(t_start) or pd.isna(t_end) or t_start >= t_end:
+        return pd.DataFrame({'Time': []})
+        
     common_time = np.arange(t_start, t_end, 1/target_fs)
     result = {'Time': common_time}
     
