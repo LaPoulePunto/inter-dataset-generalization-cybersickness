@@ -19,9 +19,12 @@ def load_archive_data(root_path, output_dir):
         # Load labels
         df_labels = pd.read_excel(excel_path, engine='openpyxl')
         
-        # Use POST_Dizzy as a simple SSQ score proxy
+        # Use POST_Dizzy as a simple SSQ score proxy and normalize to [0, 1]
         if 'POST_Dizzy' in df_labels.columns:
-            df_labels['SSQ_score'] = df_labels['POST_Dizzy']
+            max_dizzy = df_labels['POST_Dizzy'].max()
+            # Prevent division by zero if max_dizzy happens to be 0
+            scale_factor = max_dizzy if max_dizzy > 0 else 1.0
+            df_labels['SSQ_score'] = df_labels['POST_Dizzy'] / scale_factor
         else:
             df_labels['SSQ_score'] = 0.0
             
