@@ -43,13 +43,21 @@ def main():
         X_train, y_train = X[train_mask], y[train_mask]
         X_test, y_test = X[test_mask], y[test_mask]
         
+        # Calculate dataset weights so that each dataset contributes equally to the loss
+        train_datasets = df.loc[train_mask, 'dataset_id']
+        dataset_counts = train_datasets.value_counts()
+        
+        # We assign a weight to each sample inversely proportional to its dataset's size
+        dataset_weights = len(train_datasets) / (len(dataset_counts) * dataset_counts)
+        sample_weights = train_datasets.map(dataset_weights).values
+        
         print(f"Train: {len(X_train)} samples, Test: {len(X_test)} samples")
         
         if len(y_test.unique()) < 2:
              print(f"[Warning] Test set contains only class(es): {y_test.unique()}")
 
         model = LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced')
-        model.fit(X_train, y_train)
+        model.fit(X_train, y_train, sample_weight=sample_weights)
         
         y_pred = model.predict(X_test)
         
