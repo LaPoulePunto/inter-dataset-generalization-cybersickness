@@ -8,32 +8,12 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 from xgboost import XGBClassifier
 
 
-def main():
-    data_path = '/Users/oscar/inter-dataset-generalisation-cybersickness/processed_data/aggregated_dataset.csv'
-    
-    try:
-        df = pd.read_csv(data_path)
-    except Exception as e:
-        print(f"Error loading data: {e}")
-        return
-    
-    threshold = 0.0848
-    df['bin_label'] = (df['label_ssq'] >= threshold).astype(int)
-    y = df['bin_label']
-    
-    feature_cols = [col for col in df.columns if col not in ['session_id', 'dataset_id', 'label_ssq', 'bin_label']]
-    X = df[feature_cols].fillna(0)
-    
+def evaluate_models(df, X, y, target_dataset=None):
+    """
+    Entraîne et évalue les modèles Logistic Regression, RandomForest, XGBoost en utilisant une validation croisée LODO.
+    """
     datasets = df['dataset_id'].unique()
-    
-    if len(sys.argv) > 1:
-        target_dataset = sys.argv[1]
-        if target_dataset in datasets:
-            datasets = [target_dataset]
-        else:
-            print(f"Dataset '{target_dataset}' not found. Available: {list(datasets)}")
-            return
-    
+
     models = {
         "logreg": LogisticRegression(max_iter=1000, random_state=42, class_weight='balanced'),
         
@@ -109,5 +89,18 @@ def main():
         print(classification_report(all_y_true, all_y_pred, zero_division=0))
 
 
-if __name__ == "__main__":
-    main()
+data_path = '/Users/oscar/inter-dataset-generalisation-cybersickness/processed_data/aggregated_dataset.csv'
+
+df = pd.read_csv(data_path)
+
+threshold = 0.0848
+df['bin_label'] = (df['label_ssq'] >= threshold).astype(int)
+y = df['bin_label']
+
+feature_cols = [col for col in df.columns if col not in ['session_id', 'dataset_id', 'label_ssq', 'bin_label']]
+X = df[feature_cols].fillna(0)
+
+target_dataset = sys.argv[1] if len(sys.argv) > 1 else None
+
+print("Evaluating BASELINE")
+evaluate_models(df, X, y, target_dataset)
