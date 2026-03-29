@@ -33,4 +33,20 @@ X_target_c = X_target - mean_target
 Ct = np.cov(X_target_c, rowvar=False) + epsilon * np.eye(X.shape[1])
 Ct_half = np.real(scipy.linalg.fractional_matrix_power(Ct, 0.5))
 
+for d_id in df['dataset_id'].unique():
+    mask = df['dataset_id'] == d_id
+    X_source = X.loc[mask]
+    
+    mean_source = X_source.mean(axis=0)
+    X_source_c = X_source - mean_source
+    
+    Cs = np.cov(X_source_c, rowvar=False) + epsilon * np.eye(X_source.shape[1])
+    Cs_inv_half = np.real(scipy.linalg.fractional_matrix_power(Cs, -0.5))
+    
+    # Transformation (Blanchiment + Recolorisation avec la Target globale/spécifique)
+    X_aligned = np.dot(np.dot(X_source_c, Cs_inv_half), Ct_half) + mean_target.values
+    
+    # Remplacement des valeurs dans X
+    X.loc[mask] = X_aligned
+
 evaluate_models(df, X, y, target_dataset)
