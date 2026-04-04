@@ -12,6 +12,12 @@ def evaluate_models(df, X, y, target_dataset=None):
     """
     Entraîne et évalue les modèles Logistic Regression, RandomForest, XGBoost en utilisant une validation croisée LODO.
     """
+    # On ignore les datasets utilisées lors du semi-supervisées
+    valid_mask = df['dataset_id'] != 'WESAD'
+    df = df[valid_mask].reset_index(drop=True)
+    X = X[valid_mask].reset_index(drop=True)
+    y = y[valid_mask].reset_index(drop=True)
+    
     datasets = df['dataset_id'].unique()
 
     models = {
