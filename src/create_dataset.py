@@ -60,16 +60,25 @@ def main():
             slope_eda, _, _, _, _ = stats.linregress(df['Time'], df['EDA_z'])
             slope_hr, _, _, _, _ = stats.linregress(df['Time'], df['HR_z'])
             
+            t_min, t_max = df['Time'].min(), df['Time'].max()
+            weights = (df['Time'] - t_min) / (t_max - t_min) if t_max > t_min else np.ones(len(df))
+            
+            mean_eda = np.average(df['EDA_z'], weights=weights)
+            std_eda = np.sqrt(np.average((df['EDA_z'] - mean_eda)**2, weights=weights))
+            
+            mean_hr = np.average(df['HR_z'], weights=weights)
+            std_hr = np.sqrt(np.average((df['HR_z'] - mean_hr)**2, weights=weights))
+            
             data.append({
                 'session_id': session_id,
                 'dataset_id': dataset_id,
                 'label_ssq': label,
-                'mean_EDA_z': df['EDA_z'].mean(),
-                'std_EDA_z': df['EDA_z'].std(),
+                'mean_EDA_z': mean_eda,
+                'std_EDA_z': std_eda,
                 'max_EDA_z': df['EDA_z'].max(),
                 'slope_EDA_z': 0 if np.isnan(slope_eda) else slope_eda,
-                'mean_HR_z': df['HR_z'].mean(),
-                'std_HR_z': df['HR_z'].std(),
+                'mean_HR_z': mean_hr,
+                'std_HR_z': std_hr,
                 'max_HR_z': df['HR_z'].max(),
                 'slope_HR_z': 0 if np.isnan(slope_hr) else slope_hr
             })
