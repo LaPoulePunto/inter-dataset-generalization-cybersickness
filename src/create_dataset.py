@@ -60,8 +60,14 @@ def main():
             slope_eda, _, _, _, _ = stats.linregress(df['Time'], df['EDA_z'])
             slope_hr, _, _, _, _ = stats.linregress(df['Time'], df['HR_z'])
             
-            t_min, t_max = df['Time'].min(), df['Time'].max()
-            weights = (df['Time'] - t_min) / (t_max - t_min) if t_max > t_min else np.ones(len(df))
+            # --- PONDERATION TEMPORELLE (Activer/Désactiver) ---
+            # Pour utiliser la pondération au cours du temps :
+            # t_min, t_max = df['Time'].min(), df['Time'].max()
+            # weights = (df['Time'] - t_min) / (t_max - t_min) if t_max > t_min else np.ones(len(df))
+            
+            # Pour revenir au comportement par défaut, commentez les 2 lignes au-dessus et décommentez celle-ci:
+            weights = np.ones(len(df))
+            # ---------------------------------------------------
             
             mean_eda = np.average(df['EDA_z'], weights=weights)
             std_eda = np.sqrt(np.average((df['EDA_z'] - mean_eda)**2, weights=weights))
