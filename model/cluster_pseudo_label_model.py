@@ -8,6 +8,48 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 from xgboost import XGBClassifier
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+
+
+def visualize_clustering(X_scaled, cluster_labels, ssq_values, filename):
+    """
+    Fonction pour afficher les clusters et les scores SSQ.
+    """
+    if not os.path.exists('plots'):
+        os.makedirs('plots')
+    
+    # Réduction de dimension simple
+    pca = PCA(n_components=2)
+    X_pca = pca.fit_transform(X_scaled)
+    
+    # Création de la figure avec 2 graphiques
+    plt.figure(figsize=(12, 5))
+    
+    # 1. Graphique PCA
+    plt.subplot(1, 2, 1)
+    scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis')
+    plt.title("Nuage de points des clusters (PCA)")
+    plt.xlabel("PCA 1")
+    plt.ylabel("PCA 2")
+    plt.legend(*scatter.legend_elements(), title="Clusters")
+    
+    # Zoom pour mieux voir (on ignore les points trop extrêmes)
+    plt.xlim(np.percentile(X_pca[:, 0], 1), np.percentile(X_pca[:, 0], 99))
+    plt.ylim(np.percentile(X_pca[:, 1], 1), np.percentile(X_pca[:, 1], 99))
+    
+    # 2. Graphique SSQ par cluster
+    plt.subplot(1, 2, 2)
+    df_temp = pd.DataFrame({'Cluster': cluster_labels, 'SSQ': ssq_values})
+    sns.boxplot(x='Cluster', y='SSQ', data=df_temp)
+    plt.title("Scores SSQ par Cluster")
+    
+    plt.tight_layout()
+    plt.savefig(f"plots/{filename}.png")
+    plt.close()
+    print(f"Graphique sauvegardé : plots/{filename}.png")
 
 
 def evaluate_models(df, X, y, target_dataset=None):
@@ -35,6 +77,8 @@ def evaluate_models(df, X, y, target_dataset=None):
         )
     }
     
+    clustering_visualized = False # Pour ne générer qu'un seul graphique global
+
     for model_name, base_model in models.items():
         print(f"\n==============================")
         print(f"MODEL: {model_name}")
@@ -103,6 +147,20 @@ def evaluate_models(df, X, y, target_dataset=None):
                 
                 # Assignation des pseudo-labels pour WESAD
                 y_pseudo = [cluster_to_label[c] for c in wesad_clusters]
+                
+                # --- VISUALISATION ---
+                if not clustering_visualized:
+                    # On récupère les scores SSQ pour la visualisation
+                    ssq_concat = pd.concat([df.loc[train_mask, 'label_ssq'], df.loc[wesad_mask, 'label_ssq']], ignore_index=True)
+                    
+                    visualize_clustering(
+                        X_concat, 
+                        cluster_labels, 
+                        ssq_concat, 
+                        "clustering_global"
+                    )
+                    clustering_visualized = True
+
                 
                 # Concaténation des features et labels pour l'entrainement
                 X_train = pd.concat([X_train, X_wesad], ignore_index=True)
