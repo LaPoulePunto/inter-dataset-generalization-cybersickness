@@ -1,45 +1,67 @@
-# inter-dataset-generalization-cybersickness
+# Inter-Dataset Generalization for Cybersickness Detection
 
-This project investigates the generalization of cybersickness detection models across different datasets (2 for now)
+This project investigates the generalization of cybersickness detection models across multiple datasets. The goal is to develop robust models that can accurately predict cybersickness levels using physiological signals, even when tested on datasets they weren't explicitly trained on.
 
 ## Datasets
 
-The datasets used in this project are too large to be hosted on GitHub (even with Github LFS because I got a free tier account) and must be downloaded separately:
+The project supports several datasets. Due to their size, they are not hosted on GitHub and must be downloaded and placed in the `raw_data/` directory.
 
-1.  **Wang et al. (2023)** (Cybersickness_Dataset)
-    *   Download: [https://github.com/coreturn/Cybersickness_Dataset](https://github.com/coreturn/Cybersickness_Dataset)
-    *   Place the data in `raw_data/wang/`
+| Dataset |
+| :--- |
+| **Wang et al. (2023)** |
+| **WheelSimPhysio-2023** |
+| **VR Cybersickness** |
+| **Archive** |
+| **WESAD** |
 
-2.  **WheelSimPhysio-2023**
-    *   Download: [https://data.mendeley.com/datasets/z6dfjh596r/2](https://data.mendeley.com/datasets/z6dfjh596r/2)
-    *   Place the data in `raw_data/wheelSimPhysio2023/`
+## Installation
 
-## Installation and Usage
-
-This project uses [uv](https://github.com/astral-sh/uv) for dependency management.
-
-### 1. Install Dependencies
-
-To sync the environment and install dependencies:
+This project uses [uv](https://github.com/astral-sh/uv) for fast and reliable dependency management.
 
 ```bash
+# Sync environment and install dependencies
 uv sync
 ```
 
-### 2. Run the Processing Pipeline
+## Usage Pipeline
 
-To run the data extraction and processing logic (which uses `src/processing.py`):
+### 1. Data Extraction & Feature Aggregation
 
-```bash
-uv run run_extraction.py
-```
-
-### 3. Aggregate Session Data (LODO Preparation)
-
-To convert time-series session data into a single feature vector per session (mean, std, max, slope) for Leave-One-Dataset-Out (LODO) generalization:
+To process the raw data, normalize physiological signals (EDA, HR), and aggregate them into a single CSV for modeling:
 
 ```bash
-uv run src/aggregate_sessions.py
+uv run src/create_dataset.py
 ```
 
-This generates `processed_data/aggregated_dataset.csv`.
+This script will:
+- Load data from all available datasets in `raw_data/`.
+- Perform Z-score normalization.
+- Calculate features (mean, std, max, slope) for each session.
+- Generate `processed_data/aggregated_dataset.csv`.
+
+### 2. Model Training & Evaluation
+
+The models are located in the `model/` directory. You can run them using Leave-One-Dataset-Out (LODO) cross-validation.
+
+#### Baseline Models (Supervised)
+Runs Logistic Regression, Random Forest, and XGBoost on labeled data.
+```bash
+uv run model/baseline_models.py
+```
+
+#### Semi-Supervised Models (Using WESAD)
+These models leverage the unlabeled WESAD dataset to improve generalization.
+- **Pseudo-Labeling**: `uv run model/pseudo_label_model.py`
+- **Clustering-based Pseudo-Labeling**: `uv run model/cluster_pseudo_label_model.py`
+- **CORAL (Domain Adaptation)**: `uv run model/coral_model.py`
+
+## Project Structure
+
+- `src/`: Core logic for data loading and processing.
+  - `data_loading/`: Loaders for different dataset formats.
+  - `processing.py`: Normalization and signal processing utilities.
+- `model/`: Implementation of various classification and domain adaptation models.
+- `raw_data/`: Input datasets (not versioned).
+- `processed_data/`: Intermediate and final CSV files (not versioned).
+- `docs/`: Documentation and project related files.
+- `data_exploration.ipynb`: initial data analysis.
