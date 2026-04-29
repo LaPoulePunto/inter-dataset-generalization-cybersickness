@@ -22,32 +22,50 @@ def visualize_clustering(X_scaled, cluster_labels, ssq_values, filename):
         os.makedirs('plots')
     
     # Réduction de dimension simple
-    pca = PCA(n_components=2)
+    pca = PCA(n_components=3)
     X_pca = pca.fit_transform(X_scaled)
+    explained = pca.explained_variance_ratio_
+    var_str = f"{explained[0]*100:.1f}% + {explained[1]*100:.1f}% + {explained[2]*100:.1f}% de la variance expliquée"
     
-    # Création de la figure avec 2 graphiques
-    plt.figure(figsize=(12, 5))
+    # Création de la figure avec 3 graphiques
+    plt.figure(figsize=(22, 7))
     
-    # 1. Graphique PCA
-    plt.subplot(1, 2, 1)
-    scatter = plt.scatter(X_pca[:, 0], X_pca[:, 1], c=cluster_labels, cmap='viridis')
-    plt.title("Nuage de points des clusters (PCA)")
-    plt.xlabel("PCA 1")
-    plt.ylabel("PCA 2")
-    plt.legend(*scatter.legend_elements(), title="Clusters")
+    # 1. Graphique PCA — Vue 1 (azim=30°)
+    ax = plt.subplot(1, 3, 1, projection='3d')
+    scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], X_pca[:, 2], c=cluster_labels, cmap='viridis', alpha=0.6, s=20)
+    ax.view_init(elev=20, azim=30)
+    ax.set_title(f"Clusters PCA 3D (azim=30°)\n{var_str}")
+    ax.set_xlabel(f"PC1 ({explained[0]*100:.1f}%)")
+    ax.set_ylabel(f"PC2 ({explained[1]*100:.1f}%)")
+    ax.set_zlabel(f"PC3 ({explained[2]*100:.1f}%)")
+    ax.legend(*scatter.legend_elements(), title="Clusters")
     
     # Zoom pour mieux voir (on ignore les points trop extrêmes)
-    plt.xlim(np.percentile(X_pca[:, 0], 1), np.percentile(X_pca[:, 0], 99))
-    plt.ylim(np.percentile(X_pca[:, 1], 1), np.percentile(X_pca[:, 1], 99))
+    ax.set_xlim(np.percentile(X_pca[:, 0], 1), np.percentile(X_pca[:, 0], 99))
+    ax.set_ylim(np.percentile(X_pca[:, 1], 1), np.percentile(X_pca[:, 1], 99))
+    ax.set_zlim(np.percentile(X_pca[:, 2], 1), np.percentile(X_pca[:, 2], 99))
     
-    # 2. Graphique SSQ par cluster
-    plt.subplot(1, 2, 2)
+    # 2. Graphique PCA — Vue 2 (azim=120°)
+    ax = plt.subplot(1, 3, 2, projection='3d')
+    scatter = ax.scatter(X_pca[:, 0], X_pca[:, 1], X_pca[:, 2], c=cluster_labels, cmap='viridis', alpha=0.6, s=20)
+    ax.view_init(elev=20, azim=120)
+    ax.set_title(f"Clusters PCA 3D (azim=120°)\n{var_str}")
+    ax.set_xlabel(f"PC1 ({explained[0]*100:.1f}%)")
+    ax.set_ylabel(f"PC2 ({explained[1]*100:.1f}%)")
+    ax.set_zlabel(f"PC3 ({explained[2]*100:.1f}%)")
+    ax.set_xlim(np.percentile(X_pca[:, 0], 1), np.percentile(X_pca[:, 0], 99))
+    ax.set_ylim(np.percentile(X_pca[:, 1], 1), np.percentile(X_pca[:, 1], 99))
+    ax.set_zlim(np.percentile(X_pca[:, 2], 1), np.percentile(X_pca[:, 2], 99))
+    
+    # 3. Graphique SSQ par cluster
+    plt.subplot(1, 3, 3)
     df_temp = pd.DataFrame({'Cluster': cluster_labels, 'SSQ': ssq_values})
     sns.boxplot(x='Cluster', y='SSQ', data=df_temp)
     plt.title("Scores SSQ par Cluster")
+
     
     plt.tight_layout()
-    plt.savefig(f"plots/{filename}.png")
+    plt.savefig(f"plots/{filename}.png", bbox_inches='tight')
     plt.close()
     print(f"Graphique sauvegardé : plots/{filename}.png")
 
